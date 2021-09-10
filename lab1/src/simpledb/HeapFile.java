@@ -27,8 +27,6 @@ public class HeapFile implements DbFile {
         // some code goes here
     	this.file = f;
     	this.td = td;
-    	
-    	//pages.add(new HeapPage());
     }
 
     /**
@@ -38,7 +36,7 @@ public class HeapFile implements DbFile {
      */
     public File getFile() {
         // some code goes here
-        return file;
+        return this.file;
     }
 
     /**
@@ -67,7 +65,12 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
         // some code goes here
-        return null;
+    	for (HeapPage var : this.pages) {
+    		if (var.getId() == pid)
+    			return var;
+    	}
+        
+    	return null;
     }
 
     // see DbFile.java for javadocs
@@ -81,7 +84,7 @@ public class HeapFile implements DbFile {
      */
     public int numPages() {
         // some code goes here
-        return 0;
+        return this.pages.size();
     }
 
     // see DbFile.java for javadocs

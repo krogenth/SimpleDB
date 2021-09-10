@@ -7,6 +7,8 @@ package simpledb;
  */
 public class Tuple {
 	private TupleDesc desc;
+	private Field[] fields;
+	private RecordId rid;
 
     /**
      * Create a new tuple with the specified schema (type).
@@ -16,7 +18,8 @@ public class Tuple {
      */
     public Tuple(TupleDesc td) {
         // some code goes here
-    	desc = td;
+    	this.desc = td;
+    	this.fields = new Field[desc.numFields()];
     }
 
     /**
@@ -24,7 +27,7 @@ public class Tuple {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return desc;
+        return this.desc;
     }
 
     /**
@@ -33,7 +36,7 @@ public class Tuple {
      */
     public RecordId getRecordId() {
         // some code goes here
-        return null;
+        return this.rid;
     }
 
     /**
@@ -42,6 +45,7 @@ public class Tuple {
      */
     public void setRecordId(RecordId rid) {
         // some code goes here
+    	this.rid = rid;
     }
 
     /**
@@ -52,6 +56,8 @@ public class Tuple {
      */
     public void setField(int i, Field f) {
         // some code goes here
+    	if (i < this.desc.numFields())
+    		this.fields[i] = f;
     }
 
     /**
@@ -61,7 +67,10 @@ public class Tuple {
      */
     public Field getField(int i) {
         // some code goes here
-        return null;
+    	if (i < this.desc.numFields())
+    		return this.fields[i];
+    	else
+    		return null;
     }
 
     /**

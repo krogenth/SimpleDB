@@ -5,6 +5,9 @@ import java.util.*;
  * TupleDesc describes the schema of a tuple.
  */
 public class TupleDesc {
+	private Type[] types;
+	private String[] names;
+	private int size = 0;
 
     /**
      * Merge two TupleDescs into one, with td1.numFields + td2.numFields
@@ -29,6 +32,12 @@ public class TupleDesc {
      */
     public TupleDesc(Type[] typeAr, String[] fieldAr) {
         // some code goes here
+    	this.types = Arrays.copyOf(typeAr,  typeAr.length);
+    	this.names = Arrays.copyOf(fieldAr,  fieldAr.length);
+    	
+    	for (Type var : types) {
+    		this.size += var.getLen();
+    	}
     }
 
     /**
@@ -41,6 +50,12 @@ public class TupleDesc {
      */
     public TupleDesc(Type[] typeAr) {
         // some code goes here
+    	this.types = Arrays.copyOf(typeAr,  typeAr.length);
+    	this.names = new String[typeAr.length];
+    	
+    	for (Type var : types) {
+    		this.size += var.getLen();
+    	}
     }
 
     /**
@@ -48,7 +63,7 @@ public class TupleDesc {
      */
     public int numFields() {
         // some code goes here
-        return 0;
+        return this.types.length;
     }
 
     /**
@@ -60,7 +75,11 @@ public class TupleDesc {
      */
     public String getFieldName(int i) throws NoSuchElementException {
         // some code goes here
-        return null;
+    	if (i < numFields())
+    		return this.names[i];
+    	else
+    		throw new NoSuchElementException();
+    		
     }
 
     /**
@@ -72,7 +91,11 @@ public class TupleDesc {
      */
     public int nameToId(String name) throws NoSuchElementException {
         // some code goes here
-        return 0;
+    	for(int i = 0; i < this.names.length; i++) {
+    		if (this.names[i].equals(name) == true)
+    			return i;
+    	}
+        throw new NoSuchElementException();
     }
 
     /**
@@ -84,7 +107,10 @@ public class TupleDesc {
      */
     public Type getType(int i) throws NoSuchElementException {
         // some code goes here
-        return null;
+    	if (i < numFields())
+    		return this.types[i];
+    	else
+    		throw new NoSuchElementException();
     }
 
     /**
@@ -93,7 +119,7 @@ public class TupleDesc {
      */
     public int getSize() {
         // some code goes here
-        return 0;
+        return this.size;
     }
 
     /**
@@ -106,13 +132,23 @@ public class TupleDesc {
      */
     public boolean equals(Object o) {
         // some code goes here
-        return false;
+    	if (o == null)
+    		return false;
+    	
+    	if (o == this)
+    		return true;
+    	
+    	if (((TupleDesc)o).numFields() != this.numFields())
+    		return false;
+    	
+        return this.hashCode() == ((TupleDesc)o).hashCode();
     }
 
     public int hashCode() {
         // If you want to use TupleDesc as keys for HashMap, implement this so
         // that equal objects have equals hashCode() results
-        throw new UnsupportedOperationException("unimplemented");
+    	return Objects.hash(this.types, this.names, this.size);
+        //throw new UnsupportedOperationException("unimplemented");
     }
 
     /**

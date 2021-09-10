@@ -1,5 +1,7 @@
 package simpledb;
 
+import java.util.Objects;
+
 /**
  * A RecordId is a reference to a specific tuple on a specific page of a
  * specific table.
@@ -23,7 +25,7 @@ public class RecordId {
      */
     public int tupleno() {
         // some code goes here
-        return 0;
+        return this.tupleNum;
     }
 
     /**
@@ -31,7 +33,7 @@ public class RecordId {
      */
     public PageId getPageId() {
         // some code goes here
-        return pid;
+        return this.pid;
     }
     
     /**
@@ -41,7 +43,13 @@ public class RecordId {
     @Override
     public boolean equals(Object o) {
     	// some code goes here
-    	throw new UnsupportedOperationException("implement this");
+    	if (o == null)
+    		return false;
+    	
+    	if (o == this)
+    		return true;
+    	
+    	return this.hashCode() == ((RecordId)o).hashCode();
     }
     
     /**
@@ -52,7 +60,8 @@ public class RecordId {
     @Override
     public int hashCode() {
     	// some code goes here
-    	throw new UnsupportedOperationException("implement this");
+    	return Objects.hash(this.pid, this.tupleNum);
+    	//throw new UnsupportedOperationException("implement this");
     	
     }
     

@@ -43,15 +43,15 @@ public class HeapPage implements Page {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         // allocate and read the header slots of this page
-        header = new byte[getHeaderSize()];
-        for (int i=0; i<header.length; i++)
-            header[i] = dis.readByte();
+        this.header = new byte[getHeaderSize()];
+        for (int i = 0; i < this.header.length; i++)
+        	this.header[i] = dis.readByte();
 
         try{
             // allocate and read the actual records of this page
-            tuples = new Tuple[numSlots];
-            for (int i=0; i<tuples.length; i++)
-                tuples[i] = readNextTuple(dis,i);
+        	this.tuples = new Tuple[this.numSlots];
+            for (int i=0; i < this.tuples.length; i++)
+            	this.tuples[i] = readNextTuple(dis,i);
         }catch(NoSuchElementException e){
             e.printStackTrace();
         }
@@ -65,7 +65,7 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {
         // some code goes here
-        return tuples.length;
+        return this.tuples.length;
 
     }
 
@@ -75,7 +75,7 @@ public class HeapPage implements Page {
      */
     private int getHeaderSize() {
         // some code goes here
-        return header.length;
+        return this.header.length;
                  
     }
     
@@ -93,14 +93,14 @@ public class HeapPage implements Page {
     }
     
     public void setBeforeImage() {
-        oldData = getPageData().clone();
+    	this.oldData = getPageData().clone();
     }
 
     /**
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-    	return pid;
+    	return this.pid;
     }
 
     /**
@@ -110,7 +110,7 @@ public class HeapPage implements Page {
         // if associated bit is not set, read forward to the next tuple, and
         // return null.
         if (!getSlot(slotId)) {
-            for (int i=0; i<td.getSize(); i++) {
+            for (int i = 0; i < this.td.getSize(); i++) {
                 try {
                     dis.readByte();
                 } catch (IOException e) {
@@ -122,11 +122,11 @@ public class HeapPage implements Page {
 
         // read fields in the tuple
         Tuple t = new Tuple(td);
-        RecordId rid = new RecordId(pid, slotId);
+        RecordId rid = new RecordId(this.pid, slotId);
         t.setRecordId(rid);
         try {
-            for (int j=0; j<td.numFields(); j++) {
-                Field f = td.getType(j).parse(dis);
+            for (int j = 0; j < this.td.numFields(); j++) {
+                Field f = this.td.getType(j).parse(dis);
                 t.setField(j, f);
             }
         } catch (java.text.ParseException e) {
@@ -154,9 +154,9 @@ public class HeapPage implements Page {
         DataOutputStream dos = new DataOutputStream(baos);
 
         // create the header of the page
-        for (int i=0; i<header.length; i++) {
+        for (int i = 0; i < this.header.length; i++) {
             try {
-                dos.writeByte(header[i]);
+                dos.writeByte(this.header[i]);
             } catch (IOException e) {
                 // this really shouldn't happen
                 e.printStackTrace();
@@ -164,11 +164,11 @@ public class HeapPage implements Page {
         }
 
         // create the tuples
-        for (int i=0; i<tuples.length; i++) {
+        for (int i = 0; i < this.tuples.length; i++) {
 
             // empty slot
             if (!getSlot(i)) {
-                for (int j=0; j<td.getSize(); j++) {
+                for (int j = 0; j < this.td.getSize(); j++) {
                     try {
                         dos.writeByte(0);
                     } catch (IOException e) {
@@ -180,8 +180,8 @@ public class HeapPage implements Page {
             }
 
             // non-empty slot
-            for (int j=0; j<td.numFields(); j++) {
-                Field f = tuples[i].getField(j);
+            for (int j = 0; j < this.td.numFields(); j++) {
+                Field f = this.tuples[i].getField(j);
                 try {
                     f.serialize(dos);
                 
