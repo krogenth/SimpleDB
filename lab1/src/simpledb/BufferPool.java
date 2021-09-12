@@ -50,6 +50,12 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
+    	for (Page page : this.pages) {
+    		if (pid == page.getId())
+    			return page;
+    	}
+    	
+    	
         return null;
     }
 

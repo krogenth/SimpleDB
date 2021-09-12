@@ -46,6 +46,9 @@ public class RecordId {
     	if (o == null)
     		return false;
     	
+    	if (!(o instanceof RecordId))
+    		return false;
+    	
     	if (o == this)
     		return true;
     	

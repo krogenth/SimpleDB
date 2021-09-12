@@ -15,6 +15,9 @@ import java.util.*;
  */
 
 public class Catalog {
+	ArrayList<DbFile> tables;
+	ArrayList<String> tableNames;
+	ArrayList<String> tablePKeys;
 
     /**
      * Constructor.
@@ -22,6 +25,9 @@ public class Catalog {
      */
     public Catalog() {
         // some code goes here
+    	tables = new ArrayList<DbFile>();
+    	tableNames = new ArrayList<String>();
+    	tablePKeys = new ArrayList<String>();
     }
 
     /**
@@ -35,6 +41,9 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
+    	tables.add(file);
+    	tableNames.add(name);
+    	tablePKeys.add(pkeyField);
     }
 
     public void addTable(DbFile file, String name) {
@@ -59,7 +68,12 @@ public class Catalog {
      */
     public int getTableId(String name) {
         // some code goes here
-        return 0;
+    	for (int i = 0; i < this.tableNames.size(); i++) {
+    		if (this.tableNames.get(i) == name)
+    			return this.tables.get(i).getId();
+    	}
+    	throw new NoSuchElementException();
+        //return 0;
     }
 
     /**
@@ -69,7 +83,11 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+    	for(int i = 0; i < this.tables.size(); i++) {
+    		if (this.tables.get(i).getId() == tableid)
+    			return this.tables.get(i).getTupleDesc();
+    	}
+        throw new NoSuchElementException();
     }
 
     /**
@@ -80,16 +98,27 @@ public class Catalog {
      */
     public DbFile getDbFile(int tableid) throws NoSuchElementException {
         // some code goes here
+    	for(int i = 0; i < this.tables.size(); i++) {
+    		if (this.tables.get(i).getId() == tableid)
+    			return this.tables.get(i);
+    	}
         return null;
     }
 
     /** Delete all tables from the catalog */
     public void clear() {
         // some code goes here
+    	this.tables.clear();
+    	this.tableNames.clear();
+    	this.tablePKeys.clear();
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
+    	for(int i = 0; i < this.tables.size(); i++) {
+    		if (this.tables.get(i).getId() == tableid)
+    			return this.tablePKeys.get(i);
+    	}
         return null;
     }
 
@@ -100,7 +129,10 @@ public class Catalog {
 
     public String getTableName(int id) {
         // some code goes here
-        return null;
+    	if (id < this.tableNames.size())
+    		return this.tableNames.get(id);
+    	else
+    		return null;
     }
     
     /**

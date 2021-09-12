@@ -19,7 +19,12 @@ public class TupleDesc {
      */
     public static TupleDesc combine(TupleDesc td1, TupleDesc td2) {
         // some code goes here
-        return null;
+    	Type[] typeArray = Arrays.copyOf(td1.types,  td1.numFields() + td2.numFields());
+    	System.arraycopy(td2.types, 0, typeArray, td1.numFields(), td2.numFields());
+    	
+    	String[] nameArray = Arrays.copyOf(td1.names,  td1.numFields() + td2.numFields());
+    	System.arraycopy(td2.names,  0,  nameArray, td1.numFields(), td2.numFields());
+        return new TupleDesc(typeArray, nameArray);
     }
 
     /**
@@ -92,8 +97,10 @@ public class TupleDesc {
     public int nameToId(String name) throws NoSuchElementException {
         // some code goes here
     	for(int i = 0; i < this.names.length; i++) {
-    		if (this.names[i].equals(name) == true)
-    			return i;
+    		if (this.names[i] != null) {
+	    		if (this.names[i].equals(name) == true)
+	    			return i;
+    		}
     	}
         throw new NoSuchElementException();
     }
@@ -135,6 +142,9 @@ public class TupleDesc {
     	if (o == null)
     		return false;
     	
+    	if (!(o instanceof TupleDesc))
+    		return false;
+    	
     	if (o == this)
     		return true;
     	
@@ -159,6 +169,10 @@ public class TupleDesc {
      */
     public String toString() {
         // some code goes here
-        return "";
+    	StringJoiner joiner = new StringJoiner(", ");
+    	for (int i = 0; i < this.numFields(); i++) {
+    		joiner.add(this.types[i] + "(" + this.names[i] + ")");
+    	}
+        return joiner.toString();
     }
 }

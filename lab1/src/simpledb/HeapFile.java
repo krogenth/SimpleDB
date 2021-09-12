@@ -17,6 +17,7 @@ public class HeapFile implements DbFile {
 	File file;
 	TupleDesc td;
 	List<HeapPage> pages = new ArrayList<HeapPage>();
+	int id;
 
     /**
      * Constructs a heap file backed by the specified file.
@@ -27,6 +28,7 @@ public class HeapFile implements DbFile {
         // some code goes here
     	this.file = f;
     	this.td = td;
+    	id = f.getAbsoluteFile().hashCode();
     }
 
     /**
@@ -50,7 +52,8 @@ public class HeapFile implements DbFile {
     */
     public int getId() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+    	return id;
+        //throw new UnsupportedOperationException("implement this");
     }
     
     /**
@@ -59,7 +62,8 @@ public class HeapFile implements DbFile {
      */
     public TupleDesc getTupleDesc() {
     	// some code goes here
-    	throw new UnsupportedOperationException("implement this");
+    	return td;
+    	//throw new UnsupportedOperationException("implement this");
     }
 
     // see DbFile.java for javadocs
@@ -106,7 +110,68 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
-        return null;
+    	
+    	class PageIterator implements DbFileIterator {
+    		int pageIndex = 0;
+    		List<HeapPage> pages;
+    		Iterator<Tuple> tupleIterator;
+    		
+    		public void addPages(List<HeapPage> pageList) {
+    			this.pages = pageList;
+    			
+    		}
+    		
+    		public void open()
+    			throws DbException, TransactionAbortedException {
+    			if (this.pages != null && this.pages.size() > 0) {
+    				tupleIterator = this.pages.get(this.pageIndex).iterator();
+    			}
+    		}
+    		
+    		public boolean hasNext()
+    			throws DbException, TransactionAbortedException {
+    			if (this.tupleIterator != null) {
+	    			if (this.tupleIterator.hasNext())
+	    				return true;
+	    			else {
+	    				if (++this.pageIndex < this.pages.size()) {
+	    					this.tupleIterator = this.pages.get(this.pageIndex).iterator();
+	    					if (this.tupleIterator.hasNext())
+	    						return true;
+	    					else
+	    						return false;
+	    				}
+	    				else
+	    					return false;
+	    			}
+    			}
+    			else
+    				return false;
+    		}
+    		
+    		public Tuple next()
+    			throws DbException, TransactionAbortedException, NoSuchElementException {
+    			if (this.hasNext())
+    				return this.tupleIterator.next();
+    			else
+    				throw new NoSuchElementException();
+    		}
+    		
+    		public void rewind()
+    			throws DbException, TransactionAbortedException {
+    			this.pageIndex = 0;
+    			this.tupleIterator = this.pages.get(this.pageIndex).iterator();
+    		}
+    		
+    		public void close() {
+    			
+    		}
+    	}
+    	
+    	PageIterator it = new PageIterator();
+    	it.addPages(this.pages);
+    	
+        return it;
     }
     
 }

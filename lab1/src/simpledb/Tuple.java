@@ -1,5 +1,7 @@
 package simpledb;
 
+import java.util.StringJoiner;
+
 /**
  * Tuple maintains information about the contents of a tuple.
  * Tuples have a specified schema specified by a TupleDesc object and contain
@@ -84,6 +86,11 @@ public class Tuple {
      */
     public String toString() {
         // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+    	StringJoiner joiner = new StringJoiner("\t");
+    	for (int i = 0; i < this.desc.numFields(); i++) {
+    		joiner.add(this.fields[i].toString());
+    	}
+        return joiner.toString() + "\n";
+        //throw new UnsupportedOperationException("Implement this");
     }
 }

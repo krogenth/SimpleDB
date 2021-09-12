@@ -65,8 +65,7 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {
         // some code goes here
-        return this.tuples.length;
-
+        return (int)Math.floor((BufferPool.PAGE_SIZE*8) / (this.td.getSize() * 8 + 1));
     }
 
     /**
@@ -75,13 +74,12 @@ public class HeapPage implements Page {
      */
     private int getHeaderSize() {
         // some code goes here
-        return this.header.length;
-                 
+        return (int)Math.ceil(this.getNumTuples() / 8);
     }
     
     /** Return a view of this page before it was modified
         -- used by recovery */
-    public HeapPage getBeforeImage(){
+    public HeapPage getBeforeImage() {
         try {
             return new HeapPage(pid,oldData);
         } catch (IOException e) {
@@ -271,7 +269,12 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        return 0;
+    	int result = 0;
+    	for (Tuple tuple : this.tuples) {
+    		if (tuple == null)
+    			result++;
+    	}
+        return result;
     }
 
     /**
@@ -279,8 +282,12 @@ public class HeapPage implements Page {
      */
     public boolean getSlot(int i) {
         // some code goes here
-    	
-        return false;
+    	int byteIndex = i / 8;
+    	int bitIndex = i % 8;
+    	if (byteIndex < this.header.length)
+    		return (this.header[byteIndex] & (1 << bitIndex)) > 0;
+    	else
+    		return false;
     }
 
     /**
@@ -297,7 +304,39 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return null;
+        //return Arrays.stream(this.tuples).iterator();
+    	
+    	class TupleIterator<Tuple> implements Iterator<Tuple> {
+    		int nextPos = -1;
+    		Tuple[] tuples;
+    		
+    		TupleIterator(Tuple[] tuplesArr) {
+    			this.tuples = tuplesArr;
+    			this.findNextPos();
+    		}
+    		
+    		public boolean hasNext() {
+    			return (this.nextPos < (this.tuples.length - 1));
+    		}
+    		
+    		public Tuple next() {
+    			Tuple nextTuple = this.tuples[this.nextPos];
+    			this.findNextPos();
+    			return nextTuple;
+    		}
+    		
+    		private void findNextPos() {
+    			for (int i = this.nextPos + 1; i < this.tuples.length; i++) {
+    				this.nextPos = i;
+    				if (this.tuples[i] != null) {
+    					break;
+    				}
+    			}
+    		}
+    	}
+    	
+    	Iterator<Tuple> it = new TupleIterator<Tuple>(this.tuples);
+    	return it;
     }
 
 }
