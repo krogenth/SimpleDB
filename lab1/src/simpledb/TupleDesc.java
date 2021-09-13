@@ -157,7 +157,7 @@ public class TupleDesc {
     public int hashCode() {
         // If you want to use TupleDesc as keys for HashMap, implement this so
         // that equal objects have equals hashCode() results
-    	return Objects.hash(this.types, this.names, this.size);
+    	return Objects.hash(Arrays.hashCode(this.types), Arrays.hashCode(this.names), this.size);
         //throw new UnsupportedOperationException("unimplemented");
     }
 

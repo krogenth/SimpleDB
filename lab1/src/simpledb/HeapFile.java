@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -28,7 +29,17 @@ public class HeapFile implements DbFile {
         // some code goes here
     	this.file = f;
     	this.td = td;
-    	id = f.getAbsoluteFile().hashCode();
+    	this.id = f.getAbsoluteFile().hashCode();
+    	
+    	Database.getCatalog().addTable(this, String.valueOf(this.id));
+    	
+    	HeapPageId hpid = new HeapPageId(this.id, this.pages.size());
+    	try {
+			this.pages.add(new HeapPage(hpid, Files.readAllBytes(this.file.toPath())));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
     }
 
     /**
@@ -70,7 +81,7 @@ public class HeapFile implements DbFile {
     public Page readPage(PageId pid) {
         // some code goes here
     	for (HeapPage var : this.pages) {
-    		if (var.getId() == pid)
+    		if (var.getId().equals(pid))
     			return var;
     	}
         
@@ -160,11 +171,12 @@ public class HeapFile implements DbFile {
     		public void rewind()
     			throws DbException, TransactionAbortedException {
     			this.pageIndex = 0;
-    			this.tupleIterator = this.pages.get(this.pageIndex).iterator();
+    			if (this.tupleIterator != null)
+    				this.tupleIterator = this.pages.get(this.pageIndex).iterator();
     		}
     		
     		public void close() {
-    			
+    			this.tupleIterator = null;
     		}
     	}
     	
