@@ -304,9 +304,7 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        //return Arrays.stream(this.tuples).iterator();
-    	
-    	class TupleIterator<Tuple> implements Iterator<Tuple> {
+    	class TupleIterator implements Iterator<Tuple> {
     		int nextPos = -1;
     		Tuple[] tuples;
     		
@@ -335,7 +333,7 @@ public class HeapPage implements Page {
     		}
     	}
     	
-    	Iterator<Tuple> it = new TupleIterator<Tuple>(this.tuples);
+    	Iterator<Tuple> it = new TupleIterator(this.tuples);
     	return it;
     }
 

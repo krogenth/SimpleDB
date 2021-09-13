@@ -28,6 +28,10 @@ public class Predicate {
             return values()[i];
         }
     }
+    
+    int tupleFieldIndex;
+    Op operator;
+    Field operand;
 
     /**
      * Constructor.
@@ -38,6 +42,9 @@ public class Predicate {
      */
     public Predicate(int field, Op op, Field operand) {
         // some code goes here
+    	this.tupleFieldIndex = field;
+    	this.operator = op;
+    	this.operand = operand;
     }
 
     /**
@@ -51,7 +58,7 @@ public class Predicate {
      */
     public boolean filter(Tuple t) {
         // some code goes here
-        return false;
+    	return this.operand.compare(this.operator, t.getField(tupleFieldIndex));
     }
 
     /**
@@ -60,6 +67,6 @@ public class Predicate {
      */
     public String toString() {
         // some code goes here
-        return "";
+        return "f = " + String.valueOf(this.tupleFieldIndex) + " op = " + String.valueOf(this.operator) + " operand = " + String.valueOf(this.operand);
     }
 }

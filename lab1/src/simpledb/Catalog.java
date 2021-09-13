@@ -124,7 +124,31 @@ public class Catalog {
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return null;
+    	
+    	class TableIdIterator implements Iterator<Integer> {
+    		ArrayList<DbFile> tables;
+    		int tableIndex;
+    		
+    		public TableIdIterator(ArrayList<DbFile> tablesArr) {
+    			this.tables = tablesArr;
+    			this.tableIndex = 0;
+    		}
+    		
+    		public boolean hasNext() {
+    			return (this.tableIndex < this.tables.size() - 1);
+    		}
+    		
+    		public Integer next() {
+    			if (this.hasNext()) {
+    				return Integer.valueOf(this.tables.get(this.tableIndex).getId());
+    			}
+    			else
+    				return null;
+    		}
+    	}
+    	
+    	TableIdIterator it = new TableIdIterator(this.tables);
+        return it;
     }
 
     public String getTableName(int id) {

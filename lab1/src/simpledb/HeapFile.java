@@ -63,7 +63,7 @@ public class HeapFile implements DbFile {
     */
     public int getId() {
         // some code goes here
-    	return id;
+    	return this.id;
         //throw new UnsupportedOperationException("implement this");
     }
     
@@ -73,7 +73,7 @@ public class HeapFile implements DbFile {
      */
     public TupleDesc getTupleDesc() {
     	// some code goes here
-    	return td;
+    	return this.td;
     	//throw new UnsupportedOperationException("implement this");
     }
 
@@ -127,9 +127,8 @@ public class HeapFile implements DbFile {
     		List<HeapPage> pages;
     		Iterator<Tuple> tupleIterator;
     		
-    		public void addPages(List<HeapPage> pageList) {
+    		public PageIterator(List<HeapPage> pageList) {
     			this.pages = pageList;
-    			
     		}
     		
     		public void open()
@@ -180,8 +179,7 @@ public class HeapFile implements DbFile {
     		}
     	}
     	
-    	PageIterator it = new PageIterator();
-    	it.addPages(this.pages);
+    	PageIterator it = new PageIterator(this.pages);
     	
         return it;
     }
