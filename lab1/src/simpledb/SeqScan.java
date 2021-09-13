@@ -7,7 +7,11 @@ import java.util.*;
  * disk).
  */
 public class SeqScan implements DbIterator {
-
+	TransactionId tid;
+	int tableid;
+	String tableName;
+	DbFileIterator it;
+	
     /**
      * Creates a sequential scan over the specified table as a part of the
      * specified transaction.
@@ -22,12 +26,16 @@ public class SeqScan implements DbIterator {
      */
     public SeqScan(TransactionId tid, int tableid, String tableAlias) {
         // some code goes here
-    	
+    	this.tid = tid;
+    	this.tableid = tableid;
+    	this.tableName = tableAlias;
     }
 
     public void open()
         throws DbException, TransactionAbortedException {
         // some code goes here
+    	this.it = Database.getCatalog().getDbFile(this.tableid).iterator(this.tid);
+    	this.it.open();
     }
 
     /**
@@ -38,26 +46,46 @@ public class SeqScan implements DbIterator {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+    	if (this.it == null)
+    		return null;
+    	TupleDesc temp = Database.getCatalog().getTupleDesc(this.tableid);
+    	Type[] typeArr = new Type[temp.numFields()];
+    	String[] nameArr = new String[temp.numFields()];
+    	for (int i = 0; i < temp.numFields(); i++) {
+    		typeArr[i] = temp.getType(i);
+    		nameArr[i] = this.tableName + "." + temp.getFieldName(i);
+    	}
+    	temp = new TupleDesc(typeArr, nameArr);
+    	return temp;
     }
 
     public boolean hasNext() throws TransactionAbortedException, DbException {
         // some code goes here
-        return false;
+    	if (this.it == null)
+    		throw new DbException("Iterator was null");
+    	
+    	return this.it.hasNext();
     }
 
     public Tuple next()
         throws NoSuchElementException, TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+    	if (this.it == null)
+    		throw new DbException("Iterator was null");
+    	
+    	return this.it.next();	
     }
 
     public void close() {
         // some code goes here
+    	this.it.close();
+    	this.it = null;
     }
 
     public void rewind()
         throws DbException, NoSuchElementException, TransactionAbortedException {
         // some code goes here
+    	if (this.it != null)
+    		this.it.rewind();
     }
 }
