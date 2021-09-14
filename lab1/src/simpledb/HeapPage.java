@@ -11,14 +11,13 @@ import java.io.*;
  * @see BufferPool
  */
 public class HeapPage implements Page {
+	private HeapPageId pid;
+	private TupleDesc td;
+	private byte header[];
+	private Tuple tuples[];
+	private int numSlots;
 
-    HeapPageId pid;
-    TupleDesc td;
-    byte header[];
-    Tuple tuples[];
-    int numSlots;
-
-    byte[] oldData;
+	private byte[] oldData;
 
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
@@ -36,7 +35,7 @@ public class HeapPage implements Page {
      * @see Catalog#getTupleDesc
      * @see BufferPool#PAGE_SIZE
      */
-    public HeapPage(HeapPageId id, byte[] data) throws IOException {
+	public HeapPage(HeapPageId id, byte[] data) throws IOException {
         this.pid = id;
         this.td = Database.getCatalog().getTupleDesc(id.getTableId());
         this.numSlots = getNumTuples();
@@ -44,15 +43,16 @@ public class HeapPage implements Page {
 
         // allocate and read the header slots of this page
         this.header = new byte[getHeaderSize()];
-        for (int i = 0; i < this.header.length; i++)
-        	this.header[i] = dis.readByte();
+        for (int i=0; i < this.header.length; i++)
+            this.header[i] = dis.readByte();
 
-        try{
+        try {
             // allocate and read the actual records of this page
-        	this.tuples = new Tuple[this.numSlots];
-            for (int i=0; i < this.tuples.length; i++)
-            	this.tuples[i] = readNextTuple(dis,i);
-        }catch(NoSuchElementException e){
+            tuples = new Tuple[numSlots];
+            for (int i=0; i<tuples.length; i++) {
+                tuples[i] = readNextTuple(dis, i);
+            }
+        } catch(NoSuchElementException e) {
             e.printStackTrace();
         }
         dis.close();
@@ -65,7 +65,7 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {
         // some code goes here
-        return (int)Math.floor((BufferPool.PAGE_SIZE*8) / (this.td.getSize() * 8 + 1));
+        return (int)Math.floor((BufferPool.PAGE_SIZE*8.0) / (this.td.getSize() * 8.0 + 1.0));
     }
 
     /**
@@ -74,7 +74,7 @@ public class HeapPage implements Page {
      */
     private int getHeaderSize() {
         // some code goes here
-        return (int)Math.ceil(this.getNumTuples() / 8);
+        return (int)Math.ceil(this.numSlots / 8.0);
     }
     
     /** Return a view of this page before it was modified
@@ -107,7 +107,7 @@ public class HeapPage implements Page {
     private Tuple readNextTuple(DataInputStream dis, int slotId) throws NoSuchElementException {
         // if associated bit is not set, read forward to the next tuple, and
         // return null.
-        if (!getSlot(slotId)) {
+        if (!this.getSlot(slotId)) {
             for (int i = 0; i < this.td.getSize(); i++) {
                 try {
                     dis.readByte();
@@ -270,8 +270,8 @@ public class HeapPage implements Page {
     public int getNumEmptySlots() {
         // some code goes here
     	int result = 0;
-    	for (Tuple tuple : this.tuples) {
-    		if (tuple == null)
+    	for (int i = 0; i < this.numSlots; i++) {
+    		if (!this.getSlot(i))
     			result++;
     	}
         return result;
@@ -304,37 +304,12 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-    	class TupleIterator implements Iterator<Tuple> {
-    		int nextPos = -1;
-    		Tuple[] tuples;
-    		
-    		TupleIterator(Tuple[] tuplesArr) {
-    			this.tuples = tuplesArr;
-    			this.findNextPos();
-    		}
-    		
-    		public boolean hasNext() {
-    			return (this.nextPos < (this.tuples.length - 1));
-    		}
-    		
-    		public Tuple next() {
-    			Tuple nextTuple = this.tuples[this.nextPos];
-    			this.findNextPos();
-    			return nextTuple;
-    		}
-    		
-    		private void findNextPos() {
-    			for (int i = this.nextPos + 1; i < this.tuples.length; i++) {
-    				this.nextPos = i;
-    				if (this.tuples[i] != null) {
-    					break;
-    				}
-    			}
-    		}
+    	ArrayList<Tuple> tuples = new ArrayList<Tuple>();
+    	for (int i = 0; i < this.numSlots; i++) {
+    		if (this.getSlot(i))
+    			tuples.add(this.tuples[i]);
     	}
-    	
-    	Iterator<Tuple> it = new TupleIterator(this.tuples);
-    	return it;
+    	return tuples.iterator();
     }
 
 }

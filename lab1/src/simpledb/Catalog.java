@@ -15,9 +15,10 @@ import java.util.*;
  */
 
 public class Catalog {
-	ArrayList<DbFile> tables;
-	ArrayList<String> tableNames;
-	ArrayList<String> tablePKeys;
+	private HashMap<Integer, DbFile> tables = null;
+	private HashMap<Integer, String> tableNames = null;
+	private HashMap<Integer, String> tablePKeys = null;
+	private HashMap<String, Integer> tableNameIds = null;
 
     /**
      * Constructor.
@@ -25,9 +26,10 @@ public class Catalog {
      */
     public Catalog() {
         // some code goes here
-    	tables = new ArrayList<DbFile>();
-    	tableNames = new ArrayList<String>();
-    	tablePKeys = new ArrayList<String>();
+    	this.tables = new HashMap<Integer, DbFile>();
+    	this.tableNames = new HashMap<Integer, String>();
+    	this.tablePKeys = new HashMap<Integer, String>();
+    	this.tableNameIds = new HashMap<String, Integer>();
     }
 
     /**
@@ -41,13 +43,16 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
-    	tables.add(file);
-    	tableNames.add(name);
-    	tablePKeys.add(pkeyField);
+    	this.tables.put(file.getId(), file);
+    	this.tableNames.put(file.getId(), name);
+    	this.tablePKeys.put(file.getId(), pkeyField);
+    	
+    	if (name != "")
+    		this.tableNameIds.put(name, file.getId());
     }
 
     public void addTable(DbFile file, String name) {
-        addTable(file,name,"");
+        this.addTable(file,name,"");
     }
 
     /**
@@ -68,12 +73,10 @@ public class Catalog {
      */
     public int getTableId(String name) {
         // some code goes here
-    	for (int i = 0; i < this.tableNames.size(); i++) {
-    		if (this.tableNames.get(i) == name)
-    			return this.tables.get(i).getId();
-    	}
-    	throw new NoSuchElementException();
-        //return 0;
+    	if (!this.tableNameIds.containsKey(name))
+    		throw new NoSuchElementException();
+    	
+    	return this.tableNameIds.get(name);
     }
 
     /**
@@ -83,11 +86,9 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-    	for(int i = 0; i < this.tables.size(); i++) {
-    		if (this.tables.get(i).getId() == tableid)
-    			return this.tables.get(i).getTupleDesc();
-    	}
-        throw new NoSuchElementException();
+    	if (!this.tables.containsKey(tableid))
+    		throw new NoSuchElementException();
+    	return this.tables.get(tableid).getTupleDesc();
     }
 
     /**
@@ -98,11 +99,9 @@ public class Catalog {
      */
     public DbFile getDbFile(int tableid) throws NoSuchElementException {
         // some code goes here
-    	for(int i = 0; i < this.tables.size(); i++) {
-    		if (this.tables.get(i).getId() == tableid)
-    			return this.tables.get(i);
-    	}
-        return null;
+    	if (!this.tables.containsKey(tableid))
+    		throw new NoSuchElementException();
+    	return this.tables.get(tableid);
     }
 
     /** Delete all tables from the catalog */
@@ -113,50 +112,23 @@ public class Catalog {
     	this.tablePKeys.clear();
     }
 
-    public String getPrimaryKey(int tableid) {
+    public String getPrimaryKey(int tableid) throws NoSuchElementException {
         // some code goes here
-    	for(int i = 0; i < this.tables.size(); i++) {
-    		if (this.tables.get(i).getId() == tableid)
-    			return this.tablePKeys.get(i);
-    	}
-        return null;
+    	if (!this.tablePKeys.containsKey(tableid))
+    		throw new NoSuchElementException();
+    	return this.tablePKeys.get(tableid);
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-    	
-    	class TableIdIterator implements Iterator<Integer> {
-    		ArrayList<DbFile> tables;
-    		int tableIndex;
-    		
-    		public TableIdIterator(ArrayList<DbFile> tablesArr) {
-    			this.tables = tablesArr;
-    			this.tableIndex = 0;
-    		}
-    		
-    		public boolean hasNext() {
-    			return (this.tableIndex < this.tables.size() - 1);
-    		}
-    		
-    		public Integer next() {
-    			if (this.hasNext()) {
-    				return Integer.valueOf(this.tables.get(this.tableIndex).getId());
-    			}
-    			else
-    				return null;
-    		}
-    	}
-    	
-    	TableIdIterator it = new TableIdIterator(this.tables);
-        return it;
+    	return this.tables.keySet().iterator();
     }
 
-    public String getTableName(int id) {
+    public String getTableName(int tableid) throws NoSuchElementException {
         // some code goes here
-    	if (id < this.tableNames.size())
-    		return this.tableNames.get(id);
-    	else
-    		return null;
+    	if (!this.tableNames.containsKey(tableid))
+    		throw new NoSuchElementException();
+    	return this.tableNames.get(tableid);
     }
     
     /**

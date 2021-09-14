@@ -20,7 +20,8 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
     
-    private Page[] pages;
+    private HashMap<PageId, Page> pages = null;
+    private int maxPages = 0;
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -29,7 +30,8 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
-    	pages = new Page[numPages];
+    	this.pages = new HashMap<PageId, Page>();
+    	this.maxPages = numPages;
     }
 
     /**
@@ -50,12 +52,19 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
-    	for (Page page : this.pages) {
-    		if (pid == page.getId())
-    			return page;
-    	}
+    	if (this.pages.containsKey(pid))
+    		return this.pages.get(pid);
     	
-        return null;
+    	Page page = null;
+    	
+    	if (this.pages.size() < this.maxPages) {
+    		page = Database.getCatalog().getDbFile(pid.getTableId()).readPage(pid);
+    		this.pages.put(pid,  page);
+    	}
+    	else
+    		throw new DbException("BufferPool is full");
+    	
+    	return page;
     }
 
     /**

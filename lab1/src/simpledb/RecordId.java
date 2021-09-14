@@ -7,8 +7,8 @@ import java.util.Objects;
  * specific table.
  */
 public class RecordId {
-	PageId pid;
-	int tupleNum;
+	private PageId pid;
+	private int tupleNum;
 
     /** Creates a new RecordId refering to the specified PageId and tuple number.
      * @param pid the pageid of the page on which the tuple resides

@@ -5,8 +5,8 @@ import java.util.*;
  * TupleDesc describes the schema of a tuple.
  */
 public class TupleDesc {
-	private Type[] types;
-	private String[] names;
+	private Type[] types = null;
+	private String[] names = null;
 	private int size = 0;
 
     /**
@@ -98,7 +98,7 @@ public class TupleDesc {
         // some code goes here
     	for(int i = 0; i < this.names.length; i++) {
     		if (this.names[i] != null) {
-	    		if (this.names[i].equals(name) == true)
+	    		if (this.names[i].equals(name))
 	    			return i;
     		}
     	}

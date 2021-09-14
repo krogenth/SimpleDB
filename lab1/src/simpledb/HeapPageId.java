@@ -4,8 +4,8 @@ import java.util.Objects;
 
 /** Unique identifier for HeapPage objects. */
 public class HeapPageId implements PageId {
-	int tid;
-	int pNum;
+	private int tid;
+	private int pNum;
 
     /**
      * Constructor. Create a page id structure for a specific page of a

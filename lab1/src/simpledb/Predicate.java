@@ -29,9 +29,9 @@ public class Predicate {
         }
     }
     
-    int tupleFieldIndex;
-    Op operator;
-    Field operand;
+    private int tupleFieldIndex;
+    private Op operator;
+    private Field operand;
 
     /**
      * Constructor.

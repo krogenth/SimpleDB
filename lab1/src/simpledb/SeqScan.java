@@ -7,10 +7,11 @@ import java.util.*;
  * disk).
  */
 public class SeqScan implements DbIterator {
-	TransactionId tid;
-	int tableid;
-	String tableName;
-	DbFileIterator it;
+	private TransactionId tid = null;
+	private int tableid = 0;
+	private String tableName = null;
+	private DbFile table = null;
+	private DbFileIterator it = null;
 	
     /**
      * Creates a sequential scan over the specified table as a part of the
@@ -29,12 +30,13 @@ public class SeqScan implements DbIterator {
     	this.tid = tid;
     	this.tableid = tableid;
     	this.tableName = tableAlias;
+    	this.table = Database.getCatalog().getDbFile(this.tableid);
+    	this.it = this.table.iterator(this.tid);
     }
 
     public void open()
         throws DbException, TransactionAbortedException {
         // some code goes here
-    	this.it = Database.getCatalog().getDbFile(this.tableid).iterator(this.tid);
     	this.it.open();
     }
 
@@ -73,19 +75,18 @@ public class SeqScan implements DbIterator {
     	if (this.it == null)
     		throw new DbException("Iterator was null");
     	
-    	return this.it.next();	
+    	return this.it.next();
     }
 
     public void close() {
         // some code goes here
     	this.it.close();
-    	this.it = null;
     }
 
     public void rewind()
         throws DbException, NoSuchElementException, TransactionAbortedException {
         // some code goes here
-    	if (this.it != null)
-    		this.it.rewind();
+    	this.close();
+    	this.open();
     }
 }
