@@ -6,11 +6,11 @@ import java.io.*;
  * the tableid specified in the constructor
  */
 public class Insert extends AbstractDbIterator {
-	private TransactionId tid;
-    private DbIterator child;
-    private int tableid;
-    private TupleDesc td;
-    private boolean hasBeenCalled;
+	private TransactionId tid = null;
+    private DbIterator child = null;
+    private int tableid = 0;
+    private TupleDesc td = null;
+    private boolean hasBeenCalled = false;
 
     /**
      * Constructor.

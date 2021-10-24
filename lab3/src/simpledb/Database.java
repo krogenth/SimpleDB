@@ -13,7 +13,8 @@ import java.io.*;
 public class Database {
 	private static Database _instance = new Database();
     private final Catalog _catalog;
-    private BufferPool _bufferpool; 
+    private BufferPool _bufferpool;
+    private LockManager _lockManager;
 
     private final static String LOGFILENAME = "log";
     private LogFile _logfile;
@@ -21,6 +22,7 @@ public class Database {
     private Database() {
     	_catalog = new Catalog();
     	_bufferpool = new BufferPool(BufferPool.DEFAULT_PAGES);
+    	_lockManager = new LockManager();
     	try {
             _logfile = new LogFile(new File(LOGFILENAME));
         } catch(IOException e) {
@@ -44,6 +46,10 @@ public class Database {
     /** Return the catalog of the static Database instance*/
     public static Catalog getCatalog() {
         return _instance._catalog;
+    }
+    
+    public static LockManager getLockManager() {
+    	return _instance._lockManager;
     }
 
     /** Method used for testing -- create a new instance of the

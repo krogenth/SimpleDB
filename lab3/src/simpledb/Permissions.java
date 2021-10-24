@@ -22,5 +22,12 @@ public class Permissions {
 
   public static final Permissions READ_ONLY = new Permissions(0);
   public static final Permissions READ_WRITE = new Permissions(1);
+  
+  Lock.LockMode adjustForLock() {
+	  if (permLevel == 0)
+		  return Lock.LockMode.SHARED;
+	  else
+		  return Lock.LockMode.EXCLUSIVE;
+  }
 
 }

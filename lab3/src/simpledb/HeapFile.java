@@ -131,10 +131,12 @@ public class HeapFile implements DbFile {
         // find a page that has an space for a new tuple
         for (int currentPageNo = 0; currentPageNo < this.numPages(); currentPageNo++) {
             HeapPageId pageId = new HeapPageId(this.getId(), currentPageNo);
-            HeapPage currentPage = (HeapPage)Database.getBufferPool().getPage(tid, pageId, Permissions.READ_WRITE);
+            HeapPage currentPage = (HeapPage)Database.getBufferPool().getPage(tid, pageId, Permissions.READ_ONLY);
             if (currentPage.getNumEmptySlots() > 0) {
-                pageWithSpace = currentPage;
+                pageWithSpace = (HeapPage)Database.getBufferPool().getPage(tid, pageId, Permissions.READ_WRITE);
                 break;
+            } else {
+            	Database.getBufferPool().releasePage(tid,  pageId);
             }
         }
 

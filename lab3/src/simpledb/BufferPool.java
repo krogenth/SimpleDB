@@ -2,6 +2,7 @@ package simpledb;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 /**
  * BufferPool manages the reading and writing of pages into memory from
  * disk. Access methods call into it to retrieve pages, and it fetches
@@ -20,7 +21,8 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
     
-    private HashMap<PageId, Page> pages = null;
+    private Map<PageId, Page> pages = null;
+    private Map<TransactionId, Set<PageId>> transactionMap = null;
     private int maxPages = 0;
 
     /**
@@ -30,7 +32,8 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
-    	this.pages = new HashMap<PageId, Page>();
+    	this.pages = new ConcurrentHashMap<PageId, Page>();
+    	this.transactionMap = new ConcurrentHashMap<TransactionId, Set<PageId>>();
     	this.maxPages = numPages;
     }
 
@@ -52,6 +55,19 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
+    	
+    	try {
+    		Database.getLockManager().lock(pid,  tid, perm.adjustForLock());
+    	} catch (LockedException e) {
+    		throw new TransactionAbortedException();
+    	}
+    	
+    	if (tid != null ) {
+	    	Set<PageId> transactionPages = transactionMap.getOrDefault(tid, new HashSet<>());
+	    	transactionPages.add(pid);
+	    	transactionMap.put(tid, transactionPages);
+    	}
+    	
     	if (this.pages.containsKey(pid)) {
     		Page page = this.pages.get(pid);
     		page.updateAccessTimestamp();
@@ -79,6 +95,7 @@ public class BufferPool {
     public  void releasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
+    	Database.getLockManager().unlock(pid, tid);
     }
 
     /**
@@ -89,13 +106,18 @@ public class BufferPool {
     public  void transactionComplete(TransactionId tid) throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
+    	Set<PageId> transactionPages = transactionMap.getOrDefault(tid, Collections.emptySet());
+    	for (PageId p: transactionPages) {
+    		this.flushPage(p);
+    	}
+    	
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
     public   boolean holdsLock(TransactionId tid, PageId p) {
         // some code goes here
         // not necessary for lab1|lab2
-        return false;
+        return Database.getLockManager().hasLock(p,  tid);
     }
 
     /**
@@ -109,6 +131,20 @@ public class BufferPool {
         throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
+    	Set<PageId> tidPids = this.transactionMap.getOrDefault(tid, Collections.emptySet());
+    	for (PageId pid : tidPids) {
+    		if (commit) {
+    			this.flushPage(pid);
+    		} else {
+    			if (this.pages.get(pid) != null && tid.equals(this.pages.get(pid).isDirty())) {
+    				Page restoredPage = Database.getCatalog().getDbFile(pid.getTableId()).readPage(pid);
+    				this.pages.put(pid,  restoredPage);
+    			}
+    		}
+    	}
+    	
+    	Database.getLockManager().removeTransaction(tid);
+    	this.transactionMap.remove(tid);
     }
 
     /**
@@ -189,7 +225,7 @@ public class BufferPool {
         // not necessary for lab1
     	Page page = this.pages.get(pid);
     	
-    	if (page.isDirty() != null) {
+    	if (page != null && page.isDirty() != null) {
     		DbFile file = Database.getCatalog().getDbFile(pid.getTableId());
     		file.writePage(page);
     		page.markDirty(false, null);
@@ -207,9 +243,9 @@ public class BufferPool {
     	Page LRUPage = null;
     	
     	for (Page page: this.pages.values()) {
-    		if (LRUPage == null)
-    			LRUPage = page;
-    		else if (page.getAccessTimestamp() < LRUPage.getAccessTimestamp())
+    		if (page.isDirty() != null)
+    			continue;
+    		else if (LRUPage == null || page.getAccessTimestamp() < LRUPage.getAccessTimestamp())
     			LRUPage = page;
     	}
     	
@@ -224,6 +260,8 @@ public class BufferPool {
         // some code goes here
         // not necessary for lab1
     	Page LRUPage = this.findLRUPage();
+    	if (LRUPage == null)
+    		throw new DbException("No pages to evict!");
     	
     	try {
     		this.flushPage(LRUPage.getId());
