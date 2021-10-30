@@ -12,7 +12,7 @@ public class Lock {
     private final Condition waiters = lock.newCondition();
     private int sharedLockCount = 0;
     private LockMode mode = null;
-    private long maxTime = 500;
+    private long maxTime = 100;
     private TimeUnit maxTimeUnit = TimeUnit.MILLISECONDS;
 	
 	public enum LockMode {
@@ -24,16 +24,18 @@ public class Lock {
 		
 	}
 	
-	void acquire(TransactionId tid, LockMode mode) throws InterruptedException {
+	public void acquire(TransactionId tid, LockMode mode) throws InterruptedException {
 		if (mode == LockMode.SHARED) {
 			this.acquireSharedLock(tid);
 		} else if (mode == LockMode.EXCLUSIVE) {
 			this.acquireExclusiveLock(tid);
+		} else {
+			throw new RuntimeException("Invalid LockMode");
 		}
 	}
 	
-	void release(TransactionId tid) {
-		lock.lock();
+	public void release(TransactionId tid) {
+		this.lock.lock();
 		try {
 			if (this.getLockMode() == LockMode.SHARED && this.sharedLockCount > 0) {
 				this.sharedLockCount--;
@@ -42,62 +44,61 @@ public class Lock {
 			} else {
 				this.mode = null;
 			}
-			owners.remove(tid);
-			waiters.signalAll();
+			this.owners.remove(tid);
+			this.waiters.signalAll();
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 	
-	void upgradeLock(TransactionId tid) throws InterruptedException {
-		lock.lock();
-		try {
-			if (this.owners.contains(tid) && this.getLockMode() == LockMode.EXCLUSIVE) {
-				return;
-			}
-			while (this.getLockMode() == LockMode.EXCLUSIVE) {
-				waiters.await();
-			}
-			this.sharedLockCount = 0;
-			this.mode = LockMode.EXCLUSIVE;
+	public void upgradeLock(TransactionId tid) throws InterruptedException {
+		this.lock.lock();
+		
+		if (this.owners.contains(tid) && this.getLockMode() == LockMode.EXCLUSIVE)
+			return;
 			
-		} finally {
-			lock.unlock();
+		while (this.getLockMode() == LockMode.EXCLUSIVE || this.sharedLockCount > 1) {
+			if (!waiters.await(this.maxTime, this.maxTimeUnit)) {
+				this.lock.unlock();
+				throw new InterruptedException();
+			}
 		}
+		this.sharedLockCount = 0;
+		this.mode = LockMode.EXCLUSIVE;
+		this.lock.unlock();
 	}
 	
-	LockMode getLockMode() {
+	public LockMode getLockMode() {
 		return this.mode;
 	}
 	
-	void acquireSharedLock(TransactionId tid) throws InterruptedException {
-		lock.lock();
-        try {
-            while (this.getLockMode() == LockMode.EXCLUSIVE || lock.hasWaiters(waiters)) {
-                waiters.await();
-            }
-            this.sharedLockCount++;
-            owners.add(tid);
-            this.mode = LockMode.SHARED;
-        } finally {
-            lock.unlock();
-        }
+	private void acquireSharedLock(TransactionId tid) throws InterruptedException {
+		this.lock.lock();
+		
+		while (this.getLockMode() == LockMode.EXCLUSIVE || this.lock.hasWaiters(waiters)) {
+			if (!waiters.await(this.maxTime, this.maxTimeUnit)) {
+				lock.unlock();
+				throw new InterruptedException();
+			}
+		}
+		this.sharedLockCount++;
+		this.owners.add(tid);
+		this.mode = LockMode.SHARED;
+		this.lock.unlock();
 	}
 	
-	void acquireExclusiveLock(TransactionId tid) throws InterruptedException {
-		lock.lock();
-        try {
-            while (this.getLockMode() == LockMode.EXCLUSIVE || this.getLockMode() == LockMode.SHARED) {
-                if (!waiters.await(this.maxTime, this.maxTimeUnit)) {
-                	lock.unlock();
-                	Thread.currentThread().interrupt();
-                }
-            }
-            owners.add(tid);
-            this.mode = LockMode.EXCLUSIVE;
-        } finally {
-            lock.unlock();
-        }
+	private void acquireExclusiveLock(TransactionId tid) throws InterruptedException {
+		this.lock.lock();
+		
+		while (this.getLockMode() == LockMode.EXCLUSIVE || this.getLockMode() == LockMode.SHARED) {
+			if (!waiters.await(this.maxTime, this.maxTimeUnit)) {
+				this.lock.unlock();
+				throw new InterruptedException();
+			}
+		}
+		this.owners.add(tid);
+		this.mode = LockMode.EXCLUSIVE;
+		this.lock.unlock();
 	}
 
 }

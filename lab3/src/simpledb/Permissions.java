@@ -24,10 +24,12 @@ public class Permissions {
   public static final Permissions READ_WRITE = new Permissions(1);
   
   Lock.LockMode adjustForLock() {
-	  if (permLevel == 0)
+	  if (this.permLevel == 0)
 		  return Lock.LockMode.SHARED;
-	  else
+	  else if (this.permLevel == 1)
 		  return Lock.LockMode.EXCLUSIVE;
+	  else
+		  return null;
   }
 
 }

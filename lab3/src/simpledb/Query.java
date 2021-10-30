@@ -41,7 +41,8 @@ public class Query {
         @throws TransactionAbortedException If the transaction is aborted (e.g., due to a deadlock)
     */
     public Tuple next() throws DbException, NoSuchElementException, TransactionAbortedException {
-        if (!started) throw new DbException("Database not started.");
+        if (!started)
+        	throw new DbException("Database not started.");
 
         return this.op.next();
     }

@@ -57,8 +57,8 @@ public class BufferPool {
         // some code goes here
     	
     	try {
-    		Database.getLockManager().lock(pid,  tid, perm.adjustForLock());
-    	} catch (LockedException e) {
+    		Database.getLockManager().lock(pid, tid, perm.adjustForLock());
+    	} catch (DeadlockException e) {
     		throw new TransactionAbortedException();
     	}
     	
@@ -103,13 +103,10 @@ public class BufferPool {
      *
      * @param tid the ID of the transaction requesting the unlock
      */
-    public  void transactionComplete(TransactionId tid) throws IOException {
+    public  void transactionComplete(TransactionId tid) throws IOException, TransactionAbortedException, DbException {
         // some code goes here
         // not necessary for lab1|lab2
-    	Set<PageId> transactionPages = transactionMap.getOrDefault(tid, Collections.emptySet());
-    	for (PageId p: transactionPages) {
-    		this.flushPage(p);
-    	}
+    	this.transactionComplete(tid, true);
     	
     }
 

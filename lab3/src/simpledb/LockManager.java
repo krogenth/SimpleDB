@@ -12,16 +12,16 @@ public class LockManager {
 		this.tidTable = new ConcurrentHashMap<>();
 	}
 	
-	public void lock(PageId pid, TransactionId tid, Lock.LockMode mode) {
+	public void lock(PageId pid, TransactionId tid, Lock.LockMode mode) throws DeadlockException {
 		if (tid == null || pid == null)
 			return;
 		
 		this.lockTable.putIfAbsent(pid, new Lock());
-		Lock lock = lockTable.get(pid);
+		Lock lock = this.lockTable.get(pid);
 		
 		try {
-			if(this.hasLock(pid, tid)) {
-				
+			if(this.hasLock(pid, tid) && mode == lock.getLockMode()) {
+				return;
 			} else if (mode == Lock.LockMode.SHARED && this.hasLock(pid, tid) && lock.getLockMode() == Lock.LockMode.EXCLUSIVE) {
 				return;
 			} else if (mode == Lock.LockMode.EXCLUSIVE && this.hasLock(pid,  tid) && lock.getLockMode() == Lock.LockMode.SHARED) {
@@ -29,8 +29,9 @@ public class LockManager {
 			} else {
 				lock.acquire(tid, mode);
 			}
-		} catch(InterruptedException e) {
-			
+		} catch (InterruptedException e) {
+			this.removeTransaction(tid);
+			throw new DeadlockException(e);
 		}
 		
 		tid.addLock(lock);
