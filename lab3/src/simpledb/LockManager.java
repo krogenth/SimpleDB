@@ -45,6 +45,8 @@ public class LockManager {
 		if (lock != null) {
 			lock.release(tid);
 		}
+		
+		tid.removeLock(lock);
 	}
 	
 	public void removeTransaction(TransactionId tid) {
