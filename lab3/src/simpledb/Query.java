@@ -17,20 +17,20 @@ public class Query {
     boolean started = false;
 
     public Query(DbIterator root, TransactionId t) {
-        op = root;
-        tid = t;
+        this.op = root;
+        this.tid = t;
     }
 
     public void start()
         throws IOException, DbException, TransactionAbortedException {
-        op.open();
+        this.op.open();
 
-        started = true;
+        this.started = true;
     }
 
     /** @return true if there are more tuples remaining. */
     public boolean hasNext() throws DbException, TransactionAbortedException {
-        return op.hasNext();
+        return this.op.hasNext();
     }
 
     /** Returns the next tuple, or throws NoSuchElementException if the
@@ -43,12 +43,12 @@ public class Query {
     public Tuple next() throws DbException, NoSuchElementException, TransactionAbortedException {
         if (!started) throw new DbException("Database not started.");
 
-        return op.next();
+        return this.op.next();
     }
 
     /** Close the iterator */
     public void close() throws IOException {
-        op.close();
-        started = false;
+    	this.op.close();
+    	this.started = false;
     }
 }

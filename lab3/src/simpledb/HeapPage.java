@@ -274,7 +274,6 @@ public class HeapPage implements Page {
         this.setSlot(emptySlotIndex, true);
         t.setRecordId(new RecordId(this.pid, emptySlotIndex));
         this.tuples[emptySlotIndex] = t;
-    	
     }
 
     /**

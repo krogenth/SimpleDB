@@ -13,7 +13,8 @@ public abstract class AbstractDbFileIterator implements DbFileIterator {
             NoSuchElementException {
         if (next == null) {
             next = readNext();
-            if (next == null) throw new NoSuchElementException();
+            if (next == null)
+            	throw new NoSuchElementException();
         }
 
         Tuple result = next;

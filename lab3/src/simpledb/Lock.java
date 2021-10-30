@@ -4,14 +4,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 public class Lock {
 	private final Set<TransactionId> owners = new HashSet<>();
     private final ReentrantLock lock = new ReentrantLock(true);
     private final Condition waiters = lock.newCondition();
     private int sharedLockCount = 0;
-    private LockMode mode = LockMode.SHARED;
+    private LockMode mode = null;
+    private long maxTime = 500;
+    private TimeUnit maxTimeUnit = TimeUnit.MILLISECONDS;
 	
 	public enum LockMode {
         SHARED,
@@ -35,6 +37,10 @@ public class Lock {
 		try {
 			if (this.getLockMode() == LockMode.SHARED && this.sharedLockCount > 0) {
 				this.sharedLockCount--;
+				if (this.sharedLockCount == 0)
+					this.mode = null;
+			} else {
+				this.mode = null;
 			}
 			owners.remove(tid);
 			waiters.signalAll();
@@ -82,7 +88,10 @@ public class Lock {
 		lock.lock();
         try {
             while (this.getLockMode() == LockMode.EXCLUSIVE || this.getLockMode() == LockMode.SHARED) {
-                waiters.await();
+                if (!waiters.await(this.maxTime, this.maxTimeUnit)) {
+                	lock.unlock();
+                	Thread.currentThread().interrupt();
+                }
             }
             owners.add(tid);
             this.mode = LockMode.EXCLUSIVE;

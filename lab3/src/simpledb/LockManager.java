@@ -42,13 +42,13 @@ public class LockManager {
 			return;
 		
 		Lock lock = lockTable.get(pid);
-		if (lock != null)
+		if (lock != null) {
 			lock.release(tid);
-		tid.removeLock(lock);
+		}
 	}
 	
 	public void removeTransaction(TransactionId tid) {
-		if (tid == null)
+		if (tid == null || !this.tidTable.contains(tid))
 			return;
 		
 		Set<Lock> locks = tid.getLocks();
@@ -61,7 +61,7 @@ public class LockManager {
 	}
 	
 	public boolean hasLock(PageId pid, TransactionId tid) {
-		if (tid == null)
+		if (tid == null || !this.tidTable.contains(tid))
 			return false;
 		
 		Set<Lock> locks = tid.getLocks();
@@ -69,7 +69,7 @@ public class LockManager {
 			return false;
 		
 		for (Lock lock : locks) {
-			if (lock == lockTable.get(pid))
+			if (lock == this.lockTable.get(pid))
 				return true;
 		}
 		

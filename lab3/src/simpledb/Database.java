@@ -57,6 +57,7 @@ public class Database {
     */
     public static BufferPool resetBufferPool(int pages) {
         _instance._bufferpool = new BufferPool(pages);
+        _instance._lockManager = new LockManager();
         return _instance._bufferpool;
     }
 

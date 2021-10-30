@@ -163,10 +163,10 @@ public class HeapFile implements DbFile {
     	RecordId rid = t.getRecordId();
         PageId pid = rid.getPageId();
 
-        HeapPage pageToDeleteFrom = (HeapPage)Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
-        pageToDeleteFrom.deleteTuple(t);
+        HeapPage page = (HeapPage)Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
+        page.deleteTuple(t);
 
-        return pageToDeleteFrom;
+        return page;
     }
 
     // see DbFile.java for javadocs
