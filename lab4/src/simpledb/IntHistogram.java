@@ -5,6 +5,12 @@ import java.util.ArrayList;
 /** A class to represent a fixed-width histogram over a single integer-based field.
  */
 public class IntHistogram {
+	
+	private int[] buckets = null;
+	private int min = 0;
+	private int max = 0;
+	private int numValues = 0;
+	private int bucketSize = 0;
 
     /**
      * Create a new IntHistogram.
@@ -24,6 +30,10 @@ public class IntHistogram {
      */
     public IntHistogram(int buckets, int min, int max) {
     	// some code goes here
+    	this.buckets = new int[buckets];
+    	this.min = min;
+    	this.max = max;
+    	this.bucketSize = (int)Math.ceil((max - min + 1) / (buckets * 1.0));
     }
 
     /**
@@ -32,6 +42,8 @@ public class IntHistogram {
      */
     public void addValue(int v) {
     	// some code goes here
+    	this.numValues++;
+    	this.buckets[this.indexOfBucket(v)]++;
     }
 
     /**
@@ -45,17 +57,87 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
-
     	// some code goes here
-        return -1.0;
+        int index = this.indexOfBucket(v);
+        double selectivity = 0.0F;
+        
+        switch(op) {
+        case EQUALS:
+        	return (this.validateBucket(index) / (this.bucketSize * 1.0)) / (this.numValues * 1.0);
+        case NOT_EQUALS:
+        	return (this.numValues - this.validateBucket(index) / (this.bucketSize * 1.0)) / (this.numValues * 1.0);
+        case GREATER_THAN:
+        	for(int i = index; i < this.buckets.length; i++) {
+        		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
+        		double bucketPartition = 1;
+        		if(index == i)
+        			bucketPartition = this.bucketMaxByIndex(i) - v / (this.bucketWidthByIndex(i) * 1.0);
+        		selectivity += (bucketTotalPortion * bucketPartition);
+        	}
+        	return selectivity;
+        case GREATER_THAN_OR_EQ:
+        	for(int i = index; i < this.buckets.length; i++) {
+        		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
+        		double bucketPartition = 1;
+        		if(index == i)
+        			bucketPartition = this.bucketMaxByIndex(i) - v + 1 / (this.bucketWidthByIndex(i) * 1.0);
+        		selectivity += (bucketTotalPortion * bucketPartition);
+        	}
+        	return selectivity;
+        case LESS_THAN:
+        	for(int i = index; i > -1; i--) {
+        		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
+        		double bucketPartition = 1;
+        		if(index == i)
+        			bucketPartition = v - this.bucketMinByIndex(i) / (this.bucketWidthByIndex(i) * 1.0);
+        		selectivity += (bucketTotalPortion * bucketPartition);	
+        	}
+        	return selectivity;
+        case LESS_THAN_OR_EQ:
+        	for(int i = index; i > -1; i--) {
+        		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
+        		double bucketPartition = 1;
+        		if(index == i)
+        			bucketPartition = v - this.bucketMinByIndex(i) + 1 / (this.bucketWidthByIndex(i) * 1.0);
+        		selectivity += (bucketTotalPortion * bucketPartition);
+        	}
+        	return selectivity;
+        default:
+        	return 0.0F;
+        }
     }
     
     /**
      * @return A string describing this histogram, for debugging purposes
      */
     public String toString() {
-
         // some code goes here
         return null;
+    }
+    
+    private int indexOfBucket(int value) {
+    	if (value < this.min)
+    		return -1;
+    	else if(value > this.max)
+    		return this.buckets.length;
+    	else
+    		return (int) Math.floor((value - this.min) / (this.bucketSize * 1.0));
+    	
+    }
+    
+    private int bucketMinByIndex(int index) {
+    	return this.min + (index * this.bucketSize);
+    }
+    
+    private int bucketMaxByIndex(int index) {
+    	return this.min + ((index + 1) * this.bucketSize) - 1;
+    }
+    
+    private int bucketWidthByIndex(int index) {
+    	return this.bucketMaxByIndex(index) - this.bucketMinByIndex(index) + 1;
+    }
+    
+    private int validateBucket(int index) {
+    	return (index > -1 && index < this.buckets.length) ? this.buckets[index] : 0;
     }
 }
