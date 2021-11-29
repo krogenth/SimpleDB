@@ -71,7 +71,7 @@ public class IntHistogram {
         		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
         		double bucketPartition = 1;
         		if(index == i)
-        			bucketPartition = this.bucketMaxByIndex(i) - v / (this.bucketWidthByIndex(i) * 1.0);
+        			bucketPartition = (this.bucketMaxByIndex(i) - v) / (this.bucketWidthByIndex(i) * 1.0);
         		selectivity += (bucketTotalPortion * bucketPartition);
         	}
         	return selectivity;
@@ -80,7 +80,7 @@ public class IntHistogram {
         		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
         		double bucketPartition = 1;
         		if(index == i)
-        			bucketPartition = this.bucketMaxByIndex(i) - v + 1 / (this.bucketWidthByIndex(i) * 1.0);
+        			bucketPartition = (this.bucketMaxByIndex(i) - v + 1) / (this.bucketWidthByIndex(i) * 1.0);
         		selectivity += (bucketTotalPortion * bucketPartition);
         	}
         	return selectivity;
@@ -89,7 +89,7 @@ public class IntHistogram {
         		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
         		double bucketPartition = 1;
         		if(index == i)
-        			bucketPartition = v - this.bucketMinByIndex(i) / (this.bucketWidthByIndex(i) * 1.0);
+        			bucketPartition = (v - this.bucketMinByIndex(i)) / (this.bucketWidthByIndex(i) * 1.0);
         		selectivity += (bucketTotalPortion * bucketPartition);	
         	}
         	return selectivity;
@@ -98,7 +98,7 @@ public class IntHistogram {
         		double bucketTotalPortion = this.validateBucket(i) / (this.numValues * 1.0);
         		double bucketPartition = 1;
         		if(index == i)
-        			bucketPartition = v - this.bucketMinByIndex(i) + 1 / (this.bucketWidthByIndex(i) * 1.0);
+        			bucketPartition = (v - this.bucketMinByIndex(i) + 1) / (this.bucketWidthByIndex(i) * 1.0);
         		selectivity += (bucketTotalPortion * bucketPartition);
         	}
         	return selectivity;
