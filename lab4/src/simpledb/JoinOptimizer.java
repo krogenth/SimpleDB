@@ -88,7 +88,7 @@ public class JoinOptimizer {
             // Insert your code here.
             // HINT:  You may need to use the variable "j" if you implemented a join
             //        algorithm that's more complicated than a basic nested-loops join.
-            return -1.0;
+            return cost1 + (card1 * cost2) + (card1 * card2);
         }
     }
 
@@ -111,7 +111,19 @@ public class JoinOptimizer {
             return card1;
         } else {
             // some code goes here
-            return -1;
+            if(j.p == Predicate.Op.EQUALS) {
+            	if (t1pkey && t2pkey) {
+            		return Math.min(card1, card2);
+            	} else if(!t1pkey && t2pkey) {
+            		return card1;
+            	} else if (t1pkey && !t2pkey) {
+            		return card2;
+            	} else {
+            		return Math.max(card1, card2);
+            	}
+            } else {
+            	return (int)(card1 * card2 * 0.3);
+            }
         }
     }
 
@@ -170,7 +182,28 @@ public class JoinOptimizer {
 
         // some code goes here
         //Replace the following
-        return joins;
+        PlanCache planCache = new PlanCache();
+        
+        for (int i = 1; i <= joins.size(); i++) {
+        	for (Set<LogicalJoinNode> subset : enumerateSubsets(joins, i)) {
+        		CostCard bestPlan = new CostCard();
+        		bestPlan.cost = Double.MAX_VALUE;
+        		for (LogicalJoinNode node : subset) {
+        			CostCard costCard = computeCostAndCardOfSubplan(stats, filterSelectivities, node, subset, bestPlan.cost, planCache);
+        			if (costCard != null) {
+        				bestPlan = costCard;
+        			}
+        		}
+        		planCache.addPlan(subset,  bestPlan.cost,  bestPlan.card,  bestPlan.plan);
+        	}
+        }
+        
+        Vector<LogicalJoinNode> optOrder = planCache.getOrder(new HashSet<>(joins));
+        if (explain) {
+        	printJoins(optOrder, planCache, stats, filterSelectivities);
+        }
+        
+        return planCache.getOrder(new HashSet<>(joins));
     } 
  
     //===================== Private Methods =================================
